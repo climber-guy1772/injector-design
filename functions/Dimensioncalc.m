@@ -6,6 +6,7 @@ rho=input('Enter density of fluid: ');
 kvisco=input('Enter kinematic viscosity of fluid: ');%kinematic viscosity
 K=input('Enter K based on desired spray cone angle: ');%Injector geometry constant
 fillingco=input('***DEBUG*** Enter fillingco: ');
+
 numinlet= 4;%number of inlet holes     v---- Inverse function of K(filling coefficient) bayvel 261 using finverse function
 %fillingco=((((2^(1/2)/(2*K) - (2*2^(1/2))/(27*K^3))^2 - 8/(729*K^6))^(1/2) + 2^(1/2)/(2*K) - (2*2^(1/2))/(27*K^3))^(1/3) - 2^(1/2)/(3*K) + 2/(9*K^2*(((2^(1/2)/(2*K) - (2*2^(1/2))/(27*K^3))^2 - 8/(729*K^6))^(1/2) + 2^(1/2)/(2*K) - (2*2^(1/2))/(27*K^3))^(1/3)))^2;
 dischargeco=fillingco*sqrt(fillingco/(2-fillingco));%discharge coefficient
@@ -25,6 +26,7 @@ if K<4
 else
     l=.37*do;
 end
+
 disp(['Inlet Diameter: ',num2str(dp),'m or ft'])%units "Shouldn't" matter as long as inputs were consistent
 disp(['Orifice Diameter: ',num2str(do),'m or ft'])% if orifice diameter = swirler diameter, the injector is open-type, else it is closed type
 disp(['Spray angle: ',num2str(alpha),'degrees'])
