@@ -27,7 +27,7 @@ else
     l=.37*do;
 end
 
-disp(['Inlet Diameter: ',num2str(dp),'m or ft'])%units "Shouldn't" matter as long as inputs were consistent
+disp(['Inlet Diameter: ',num2str(dprimep),'m or ft'])%units "Shouldn't" matter as long as inputs were consistent
 disp(['Orifice Diameter: ',num2str(do),'m or ft'])% if orifice diameter = swirler diameter, the injector is open-type, else it is closed type
 disp(['Spray angle: ',num2str(alpha),'degrees'])
 disp(['Swirl Chamber Diameter: ',num2str(Ds),'m or ft'])
