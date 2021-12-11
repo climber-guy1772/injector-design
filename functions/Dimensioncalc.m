@@ -1,9 +1,9 @@
 %Dimensions Calculator Lots of Innacuracy due to not accounting for things
 %For the moment does not account for K lambda
-mdot= input('Enter mass flow rate: ');
-pressuret=input('Enter Pressure drop: ');%liquid overpressure/pressure drop
-rho=input('Enter density of fluid: ');
-kvisco=input('Enter kinematic viscosity of fluid: ');%kinematic viscosity
+mdot= input('Enter mass flow rate (kg/s or lbs/s): ');
+pressuret=input('Enter Pressure drop (Pa or Lbs/ft^2): ');%liquid overpressure/pressure drop
+rho=input('Enter density of fluid (kg/m^3 or Lbs/ft^3): ');
+kvisco=input('Enter kinematic viscosity of fluid(m^2/s or ft^2/s): ');%kinematic viscosity
 K=input('Enter K based on desired spray cone angle: ');%Injector geometry constant
 %dischargeco=input('***DEBUG*** Enter dischargeco: ');
 
@@ -20,7 +20,7 @@ Re=(4*mdot)/(pi*rho*kvisco*sqrt(numinlet)*dp);%Reynolds number
 frictco=10^((25.8/((log10(Re))^2.58))-2);%friction coefficient
 dprimep=dp/.87;%bayvel 264
 Ds=2*R+dprimep;%diameter of swirl chamber
-ls=2*dprimep;%length of inlet orifice
+ls=2*dprimep;%length of swirl chamber
 if K<4
     l=.7*do;        %length of discharge orifice
 else
@@ -29,6 +29,7 @@ end
 
 disp(['Inlet Diameter: ',num2str(dprimep),'m or ft'])%units "Shouldn't" matter as long as inputs were consistent
 disp(['Orifice Diameter: ',num2str(do),'m or ft'])% if orifice diameter = swirler diameter, the injector is open-type, else it is closed type
-disp(['Spray angle: ',num2str(alpha),'degrees'])
+disp(['Spray angle: ',num2str(alpha),' degrees'])
 disp(['Swirl Chamber Diameter: ',num2str(Ds),'m or ft'])
 disp(['Length of inlet orifice: ',num2str(ls),'m or ft'])
+disp(['Length of discharge orifice: ',num2str(l), 'm or ft'])
