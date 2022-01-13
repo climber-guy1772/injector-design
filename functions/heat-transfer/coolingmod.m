@@ -1,13 +1,18 @@
-ITval = 50;   % Initial temperature of the model
-RTval = 40;   % Burntime of the model
-TCval = 40;   % Thermal conductivity of the model
-MDval = 10;   % Mass density value of the model
-SHval = 10;   % Specific heat of the model
+% qexch (heat exchange) takes an array of inputs in the form:
+% {ITval,RTval,TCval,MDval,SHval}
+% Where:                                          Units:
+%   ITval:    inital temperature                    [degF]
+%   RTval:    runtime (burntime for us) of system   [s]     (duh)
+%   TCval:    thermal conductivity of material      [BTU/(h*ft*degF)]
+%   MDval:    mass density of material              [slugs/ft^3]
+%   SHval:    specific heat of material             [BTU/(lb*degF)]
+ITval = 50;
+RTval = 15;             % Approximate burn duration: 15s
+TCval = 8.672639736;    % Thermal conductivity of stainless steel: ~15  W/(mK)
+MDval = 14.552402;      % Mass density of stainless steel: ~7,500       kg/m3
+SHval = 0.112;          % Specific heat of stainless steel: 0.112       BTU/(lb*degF)
 
-% set up output file header (for fun)
-header = "PSP Liquids - Injector Design Team"+newline+string(datetime('now'));
-
-values = [ITval,RTval,TCval,MDval,SHval];
+data = [ITval,RTval,TCval,MDval,SHval];
 % qexch (heat exchange) takes an array of inputs in the form:
 % {initT,runtime,TCval,MDval,SHval}
-qexch(values,header)
+qexch(data)
