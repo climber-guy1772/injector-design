@@ -7,7 +7,7 @@
 %   MDval:    mass density of material              [slugs/ft^3]
 %   SHval:    specific heat of material             [BTU/(lb*degF)]
 ITval = 50;
-RTval = 15;             % Approximate burn duration: 15s
+RTval = 20;             % Approximate burn duration: 20                 s
 TCval = 8.672639736;    % Thermal conductivity of stainless steel: ~15  W/(mK)
 MDval = 14.552402;      % Mass density of stainless steel: ~7,500       kg/m3
 SHval = 0.112;          % Specific heat of stainless steel: 0.112       BTU/(lb*degF)
