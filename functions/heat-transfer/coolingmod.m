@@ -1,3 +1,7 @@
+% This program is only half complete: fluids modeling is needed to obtain
+% convection/heat transfer from combustion. Data passed to qexch will
+% change.
+
 % qexch (heat exchange) takes an array of inputs in the form:
 % {ITval,RTval,TCval,MDval,SHval}
 % Where:                                          Units:
