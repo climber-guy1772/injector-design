@@ -5,7 +5,7 @@ Rocket 3 ECP1 - Pintle Sizing
 Contributors: Liam Schenk
 Last Modified: 23 Jan., 2022
 Description: Script for Rocket 3 pintle injector sizing and optimization.
-Version: v1.1.2
+Version: v1.1.3
 %}
 clear;
 clc;
@@ -15,14 +15,17 @@ adtData = zeros(50,4);
 
 % Generic properties:
 skipDist = 1; % [N/A]
-disCoef = 0.02; % [N/A]; INITIAL VALUE FOR LOOP
+disCoef = 0.5; % [N/A]; INITIAL VALUE FOR LOOP
 mdot = 15.5; % [lbm/s]; total mass flow rate
 ofRatio = 2.65; % [N/A]
 chambP = 250; % [psi]
 halfAgl_LMR = 65; % [deg]; https://arc-aiaa-org.ezproxy.lib.purdue.edu/doi/pdf/10.2514/6.2019-0152
 halfAgl_TMR = 45; % [deg]
 numHoles = 60; % [N/A]
+
+% Constants/other data:
 grav = 32.2; % [ft/s^2]
+bitSizes = [0.0512;0.052;0.055;0.0551;0.0591;0.0595;0.0625;0.063;0.0635;0.0669;0.07;0.0709;0.073;0.0748;0.076;0.0781;0.0785;0.0787;0.0810;0.0820;0.0827;0.0860;0.0866;0.0890;0.0906;0.0935;0.0938;0.0945;0.096;0.098;0.0984;0.0995;0.1015;0.1024;0.104]; % [in]
 
 % Propellant properties:
 dnstLOX = 1.141; % [g/mL]
@@ -42,17 +45,17 @@ dnstLOX = dnstLOX*62.428; % now [lbm/ft^3]
 dnstRP1 = dnstRP1*62.428; % now [lbm/ft^3]
 deltaP = deltaP*144; % now [lbf/ft^2]
 
+% Formatting (see line 88):
 givenData = [skipDist,mdot,ofRatio,chambP,deltaP,numHoles,dnstLOX,dnstRP1,mdotLOX,mdotRP1];
 msmtData = [chambDiam,shaftDiam,shaftRad,shaftLength];
 
-while disCoef <= 1.02
+while disCoef <= 1.01
     % Math! (Oxidizer @ center)
     areaLOX = mdotLOX/(sqrt(2*deltaP*dnstLOX*grav)*disCoef); % [ft^2]
     areaLOX = areaLOX*144; % [in^2]
     diamLOX = 2*sqrt(areaLOX/(pi*numHoles)); % [in]
 
     % Define real size (by machining capabilities):
-    bitSizes = [0.0785;0.0787;0.0810;0.0820;0.0827;0.0860;0.0866]; % [in]
     tempMatrix = repmat(diamLOX,[1 length(bitSizes)]);
     [minVal,indexMin] = min(abs(tempMatrix-bitSizes'));
     diamLOX_real = bitSizes(indexMin); % [in]
@@ -80,7 +83,7 @@ while disCoef <= 1.02
     injData(lcv,1:9) = [disCoef,diamLOX,areaLOX,diamLOX_real,areaLOX_real,annThk,areaRP1,velRP1,velLOX];
     adtData(lcv,1:4) = [TMR,momentRat,ofRatio_real,blkgFac];
     lcv = lcv + 1;
-    disCoef = disCoef + 0.02;
+    disCoef = disCoef + 0.01;
 end
 
 % Generate tables:
