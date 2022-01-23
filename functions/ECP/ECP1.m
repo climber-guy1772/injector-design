@@ -3,15 +3,19 @@ Purdue Space Program - Liquids
 Rocket 3 ECP1 - Pintle Sizing
 -----------------------------
 Contributors: Liam Schenk
-Last Modified: 22 Jan., 2022
+Last Modified: 23 Jan., 2022
 Description: Script for Rocket 3 pintle injector sizing and optimization.
+Version: v1.1.2
 %}
 clear;
 clc;
+lcv = 1;
+injData = zeros(50,9);
+adtData = zeros(50,4);
 
 % Generic properties:
 skipDist = 1; % [N/A]
-disCoef = 0.8; % [N/A]
+disCoef = 0.02; % [N/A]; INITIAL VALUE FOR LOOP
 mdot = 15.5; % [lbm/s]; total mass flow rate
 ofRatio = 2.65; % [N/A]
 chambP = 250; % [psi]
@@ -31,45 +35,64 @@ deltaP = 0.25*chambP; % [psi]
 chambDiam = 9.5; % [in]
 shaftDiam = chambDiam/5; % [in]
 shaftRad = shaftDiam/24; % [ft]
+shaftLength = skipDist*shaftDiam; % [in]
 
 % Convert units:
 dnstLOX = dnstLOX*62.428; % now [lbm/ft^3]
 dnstRP1 = dnstRP1*62.428; % now [lbm/ft^3]
 deltaP = deltaP*144; % now [lbf/ft^2]
 
-% Math! (Oxidizer @ center)
-areaLOX = mdotLOX/(sqrt(2*deltaP*dnstLOX*grav)*disCoef); % [ft^2]
-areaLOX = areaLOX*144; % [in^2]
-diamLOX = 2*sqrt(areaLOX/(pi*numHoles)); % [in]
+givenData = [skipDist,mdot,ofRatio,chambP,deltaP,numHoles,dnstLOX,dnstRP1,mdotLOX,mdotRP1];
+msmtData = [chambDiam,shaftDiam,shaftRad,shaftLength];
 
-% Define real size (by machining capabilities):
-bitSizes = [0.0785;0.0787;0.0810;0.0820;0.0827;0.0860;0.0866]; % [in]
-tempMatrix = repmat(diamLOX,[1 length(bitSizes)]);
-[minVal,indexMin] = min(abs(tempMatrix-bitSizes'));
-diamLOX_real = bitSizes(indexMin); % [in]
-areaLOX_real = pi*numHoles*(diamLOX_real/2)^2; % [in]
+while disCoef <= 1.02
+    % Math! (Oxidizer @ center)
+    areaLOX = mdotLOX/(sqrt(2*deltaP*dnstLOX*grav)*disCoef); % [ft^2]
+    areaLOX = areaLOX*144; % [in^2]
+    diamLOX = 2*sqrt(areaLOX/(pi*numHoles)); % [in]
 
-% Update units:
-diamLOX_real = diamLOX_real/12; % now [ft]
-areaLOX_real = areaLOX_real/144; % now [ft]
+    % Define real size (by machining capabilities):
+    bitSizes = [0.0785;0.0787;0.0810;0.0820;0.0827;0.0860;0.0866]; % [in]
+    tempMatrix = repmat(diamLOX,[1 length(bitSizes)]);
+    [minVal,indexMin] = min(abs(tempMatrix-bitSizes'));
+    diamLOX_real = bitSizes(indexMin); % [in]
+    areaLOX_real = pi*numHoles*(diamLOX_real/2)^2; % [in]
 
-% Math! (Fuel around outer):
-annThk = (pi*dnstLOX*diamLOX_real)/(4*dnstRP1*(ofRatio^2)); % [ft]
-areaRP1 = (pi*(shaftRad+annThk)^2)-(pi*(shaftRad)^2); % [ft^2]
+    % Update units:
+    diamLOX_real = diamLOX_real/12; % now [ft]
+    areaLOX_real = areaLOX_real/144; % now [ft^2]
 
-% Injector velocities:
-velRP1 = mdotRP1/(areaRP1*dnstRP1); % [ft/s]
-velLOX = mdotLOX/(areaLOX_real*dnstLOX); % [ft/s]
-TMR = (mdotLOX*velLOX)/(mdotRP1*velRP1); % [N/A]
+    % Math! (Fuel around outer):
+    annThk = (pi*dnstLOX*diamLOX_real)/(4*dnstRP1*(ofRatio^2)); % [ft]
+    areaRP1 = (pi*(shaftRad+annThk)^2)-(pi*(shaftRad)^2); % [ft^2]
+
+    % Injector velocities:
+    velRP1 = mdotRP1/(areaRP1*dnstRP1); % [ft/s]
+    velLOX = mdotLOX/(areaLOX_real*dnstLOX); % [ft/s]
+    TMR = (mdotLOX*velLOX)/(mdotRP1*velRP1); % [N/A]
+
+    % Additional calculations:
+    momentRat = (dnstRP1*(velRP1^2)*annThk*diamLOX_real*4)/(dnstLOX*(velLOX^2)*pi*shaftRad^2);
+    ofRatio_real = 1/(velLOX/velRP1);
+    blkgFac = (numHoles*diamLOX_real*6)/(pi*shaftDiam);
+
+    % Update and loop:
+    injData(lcv,1:9) = [disCoef,diamLOX,areaLOX,diamLOX_real,areaLOX_real,annThk,areaRP1,velRP1,velLOX];
+    adtData(lcv,1:4) = [TMR,momentRat,ofRatio_real,blkgFac];
+    lcv = lcv + 1;
+    disCoef = disCoef + 0.02;
+end
+
+% Generate tables:
+table1 = array2table(givenData,'VariableNames',{'Skip Distance','Total MDot [lbm/s]','O/F','Chamber Pressure [psi]','Pressure Drop [lbf/ft^2]','Number of Holes','LOX Density [lbm/ft^3]','RP1 Density [lbm/ft^3]','LOX MDot [lbm/s]','RP1 MDot [lbm/s]'});
+table2 = array2table(injData,'VariableNames',{'Cd','LOX Diam [in]','LOX Area [in^2]','Real LOX Diam [ft]','Real LOX Area [ft^2]','Annular Thickness [ft]','RP1 Area [ft^2]','RP1 Vel [ft/s]','LOX Vel [ft/s]'});
+table3 = array2table(adtData,'VariableNames',{'TMR','Moment Ratio','Actual OF Ratio','Blockage Factor'});
+table4 = array2table(msmtData,'VariableNames',{'Chamber Diam [in]','Shaft Diam [in]','Shaft Rad [ft]','Shaft Length [in]'});
 
 %{
 To do:
-- Calculate moment ratio
-- Calculate actual O/F ratio
-- Iterate to optimize sizes
-- Get impingement points
-- Try at different Cds
-- Finish output file
+- Get impingement points?
+- Optimizing by picking best set
 %}
 
 % Distribute results:
@@ -81,4 +104,11 @@ while dirExist ~= 7
 end
 cd ..\ECP\ECP1.Output
 outputPath = cd;
+
+filename = ['Output.',datestr(now,'yyyymmddTHHMMSS'),'.xlsx'];
+writetable(table1,filename,'Sheet',1,'Range','B2')
+writetable(table2,filename,'Sheet',1,'Range','B8')
+writetable(table3,filename,'Sheet',1,'Range','L8')
+writetable(table4,filename,'Sheet',1,'Range','B5')
+
 cd(mainPath)
