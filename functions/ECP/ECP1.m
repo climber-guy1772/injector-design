@@ -2,20 +2,21 @@
 Purdue Space Program - Liquids
 Rocket 3 ECP1 - Pintle Sizing
 -----------------------------
-Contributors: Liam Schenk
+Contributors: Liam Schenk, Jan Ayala
 Last Modified: 23 Jan., 2022
 Description: Script for Rocket 3 pintle injector sizing and optimization.
-Version: v1.1.4
+Version: v1.2.1
 %}
 clear;
 clc;
-lcv = 1;
-injData = zeros(50,9);
-adtData = zeros(50,4);
+lcv = 1; % Loop control variable
+injData = zeros(100,9);
+adtData = zeros(100,4);
+optData = zeros(2,13);
 
 % Generic properties:
 skipDist = 1; % [N/A]
-disCoef = 0.5; % [N/A]; INITIAL VALUE FOR LOOP
+disCoef = 0.8; % [N/A]
 mdot = 15.5; % [lbm/s]; total mass flow rate
 ofRatio = 2.65; % [N/A]
 chambP = 250; % [psi]
@@ -46,18 +47,18 @@ dnstRP1 = dnstRP1*62.428; % now [lbm/ft^3]
 deltaP = deltaP*144; % now [lbf/ft^2]
 
 % Formatting (see line 88):
-givenData = [skipDist,mdot,ofRatio,chambP,deltaP,numHoles,dnstLOX,dnstRP1,mdotLOX,mdotRP1];
+givenData = [skipDist,mdot,ofRatio,chambP,deltaP,disCoef,dnstLOX,dnstRP1,mdotLOX,mdotRP1];
 msmtData = [chambDiam,shaftDiam,shaftRad,shaftLength];
 
-while disCoef <= 1.01
+while numHoles <= 161
     % Math! (Oxidizer @ center)
     areaLOX = mdotLOX/(sqrt(2*deltaP*dnstLOX*grav)*disCoef); % [ft^2]
     areaLOX = areaLOX*144; % [in^2]
     diamLOX = 2*sqrt(areaLOX/(pi*numHoles)); % [in]
 
     % Define real size (by machining capabilities):
-    tempMatrix = repmat(diamLOX,[1 length(bitSizes)]);
-    [minVal,indexMin] = min(abs(tempMatrix-bitSizes'));
+    tempMatrix1 = repmat(diamLOX,[1 length(bitSizes)]);
+    [~,indexMin] = min(abs(tempMatrix1-bitSizes'));
     diamLOX_real = bitSizes(indexMin); % [in]
     areaLOX_real = pi*numHoles*(diamLOX_real/2)^2; % [in]
 
@@ -80,24 +81,31 @@ while disCoef <= 1.01
     blkgFac = (numHoles*diamLOX_real*6)/(pi*shaftDiam);
 
     % Update and loop:
-    injData(lcv,1:9) = [disCoef,diamLOX,areaLOX,diamLOX_real,areaLOX_real,annThk,areaRP1,velRP1,velLOX];
+    injData(lcv,1:9) = [numHoles,diamLOX,areaLOX,diamLOX_real,areaLOX_real,annThk,areaRP1,velRP1,velLOX];
     adtData(lcv,1:4) = [TMR,momentRat,ofRatio_real,blkgFac];
     lcv = lcv + 1;
-    disCoef = disCoef + 0.01;
+    numHoles = numHoles + 1;
 end
 
+% Find optimal results:
+actOFData = adtData(1:end,3);
+tempMatrix2 = repmat(ofRatio,[1 length(actOFData)]);
+[~,indexMin] = min(abs(tempMatrix2-adtData(1:end,3)));
+indexMin = floor(mean(indexMin));
+optData(1,1:end) = [injData(indexMin,1:end),adtData(indexMin,1:end)];
+
+momRatData = adtData(1:end,2);
+tempMatrix3 = ones(1,length(momRatData));
+[~,indexMin] = min(abs(tempMatrix3-adtData(1:end,2)));
+indexMin = floor(mean(indexMin));
+optData(2,1:end) = [injData(indexMin,1:end),adtData(indexMin,1:end)];
+
 % Generate tables:
-table1 = array2table(givenData,'VariableNames',{'Skip Distance','Total MDot [lbm/s]','O/F','Chamber Pressure [psi]','Pressure Drop [lbf/ft^2]','Number of Holes','LOX Density [lbm/ft^3]','RP1 Density [lbm/ft^3]','LOX MDot [lbm/s]','RP1 MDot [lbm/s]'});
-table2 = array2table(injData,'VariableNames',{'Cd','LOX Diam [in]','LOX Area [in^2]','Real LOX Diam [ft]','Real LOX Area [ft^2]','Annular Thickness [ft]','RP1 Area [ft^2]','RP1 Vel [ft/s]','LOX Vel [ft/s]'});
+table1 = array2table(givenData,'VariableNames',{'Skip Distance','Total MDot [lbm/s]','O/F','Chamber Pressure [psi]','Pressure Drop [lbf/ft^2]','Cd','LOX Density [lbm/ft^3]','RP1 Density [lbm/ft^3]','LOX MDot [lbm/s]','RP1 MDot [lbm/s]'});
+table2 = array2table(injData,'VariableNames',{'Number of Holes','LOX Diam [in]','LOX Area [in^2]','Real LOX Diam [ft]','Real LOX Area [ft^2]','Annular Thickness [ft]','RP1 Area [ft^2]','RP1 Vel [ft/s]','LOX Vel [ft/s]'});
 table3 = array2table(adtData,'VariableNames',{'TMR','Moment Ratio','Actual OF Ratio','Blockage Factor'});
 table4 = array2table(msmtData,'VariableNames',{'Chamber Diam [in]','Shaft Diam [in]','Shaft Rad [ft]','Shaft Length [in]'});
-
-%{
-To do:
-- Get impingement points?
-- Optimizing by picking best set
-- Iterate number of holes
-%}
+table5 = array2table(optData,'VariableNames',{'Number of Holes','LOX Diam [in]','LOX Area [in^2]','Real LOX Diam [ft]','Real LOX Area [ft^2]','Annular Thickness [ft]','RP1 Area [ft^2]','RP1 Vel [ft/s]','LOX Vel [ft/s]','TMR','Moment Ratio','Actual OF Ratio','Blockage Factor'});
 
 % Distribute results:
 mainPath = cd;
@@ -114,5 +122,9 @@ writetable(table1,filename,'Sheet',1,'Range','B2')
 writetable(table2,filename,'Sheet',1,'Range','B8')
 writetable(table3,filename,'Sheet',1,'Range','L8')
 writetable(table4,filename,'Sheet',1,'Range','B5')
+writematrix('Optimal Results:',filename,'Sheet',1,'Range','B112')
+writematrix('By O/F',filename,'Sheet',1,'Range','B114')
+writematrix('By Moment Ratio',filename,'Sheet',1,'Range','B115')
+writetable(table5,filename,'Sheet',1,'Range','C113')
 
 cd(mainPath)
