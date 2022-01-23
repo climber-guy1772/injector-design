@@ -5,7 +5,7 @@ Rocket 3 ECP1 - Pintle Sizing
 Contributors: Liam Schenk
 Last Modified: 23 Jan., 2022
 Description: Script for Rocket 3 pintle injector sizing and optimization.
-Version: v1.1.3
+Version: v1.1.4
 %}
 clear;
 clc;
@@ -75,8 +75,8 @@ while disCoef <= 1.01
     TMR = (mdotLOX*velLOX)/(mdotRP1*velRP1); % [N/A]
 
     % Additional calculations:
-    momentRat = (dnstRP1*(velRP1^2)*annThk*diamLOX_real*4)/(dnstLOX*(velLOX^2)*pi*shaftRad^2);
-    ofRatio_real = 1/(velLOX/velRP1);
+    momentRat = (dnstRP1*(velRP1^2)*annThk*diamLOX_real*4)/(dnstLOX*(velLOX^2)*pi*diamLOX_real^2);
+    ofRatio_real = velRP1/velLOX;
     blkgFac = (numHoles*diamLOX_real*6)/(pi*shaftDiam);
 
     % Update and loop:
@@ -96,6 +96,7 @@ table4 = array2table(msmtData,'VariableNames',{'Chamber Diam [in]','Shaft Diam [
 To do:
 - Get impingement points?
 - Optimizing by picking best set
+- Iterate number of holes
 %}
 
 % Distribute results:
