@@ -5,7 +5,7 @@ Rocket 3 ECP1 - Pintle Sizing
 Contributors: Liam Schenk, Jan Ayala
 Last Modified: 23 Jan., 2022
 Description: Script for Rocket 3 pintle injector sizing and optimization.
-Version: v1.3.3
+Version: v1.3.4
 %}
 clear;
 clc;
@@ -107,8 +107,8 @@ impgmtLoc1 = ((chambDiam/2)-(shaftRad*12))*tand(90-TMR_halfAgl); % [in]; horizon
 wallImpgmt1 = impgmtLoc1+shaftLength; % [in]
 
 % Estimate impingement from LMR:
-optLMR = optTMR*(annThk/injData(indexMin,4));
-LMR_halfAgl = acosd(1/(1+optLMR)); % [deg]; half angle
+optLMR = (dnstLOX*velLOX^2*areaLOX_real)/(dnstRP1*velRP1^2*annThk*diamLOX_real);% [N/A]
+LMR_halfAgl = .85*atand(4*optLMR);% [deg] half angle
 impgmtLoc2 = ((chambDiam/2)-(shaftRad*12))*tand(90-LMR_halfAgl); % [in]
 wallImpgmt2 = impgmtLoc2+shaftLength; % [in]
 
