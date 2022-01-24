@@ -5,7 +5,7 @@ Rocket 3 ECP1 - Pintle Sizing
 Contributors: Liam Schenk, Jan Ayala
 Last Modified: 23 Jan., 2022
 Description: Script for Rocket 3 pintle injector sizing and optimization.
-Version: v1.3.2
+Version: v1.3.3
 %}
 clear;
 clc;
@@ -22,9 +22,6 @@ disCoef = 0.8; % [N/A]
 mdot = 15.5; % [lbm/s]; total mass flow rate
 ofRatio = 2.65; % [N/A]
 chambP = 250; % [psi]
-halfAgl_LMR = 65; % [deg]; https://arc-aiaa-org.ezproxy.lib.purdue.edu/doi/pdf/10.2514/6.2019-0152
-halfAgl_TMR = 45; % [deg]
-numHoles = 20; % [N/A]; INITIAL VALUE TO ITERATE FROM
 
 % Constants/other data:
 grav = 32.2; % [ft/s^2]
@@ -52,8 +49,9 @@ deltaP = deltaP*144; % now [lbf/ft^2]
 givenData = [skipDist,mdot,ofRatio,chambP,deltaP,disCoef,dnstLOX,dnstRP1,mdotLOX,mdotRP1];
 msmtData = [chambDiam,shaftDiam,shaftRad,shaftLength];
 
-while numHoles <= 121
-    % Math! (Oxidizer @ center)
+% Meat:
+for numHoles = 20:1:121
+    % Math! (Oxidizer @ center):
     areaLOX = mdotLOX/(sqrt(2*deltaP*dnstLOX*grav)*disCoef); % [ft^2]
     areaLOX = areaLOX*144; % [in^2]
     diamLOX = 2*sqrt(areaLOX/(pi*numHoles)); % [in]
@@ -86,7 +84,6 @@ while numHoles <= 121
     injData(lcv,1:9) = [numHoles,diamLOX,areaLOX,diamLOX_real,areaLOX_real,annThk,areaRP1,velRP1,velLOX];
     adtData(lcv,1:4) = [TMR,momentRat,ofRatio_real,blkgFac];
     lcv = lcv + 1;
-    numHoles = numHoles + 1;
 end
 
 % Find optimal results:
@@ -102,11 +99,21 @@ tempMatrix3 = ones(1,length(momRatData));
 indexMin = floor(mean(indexMin));
 optData(2,1:end) = [injData(indexMin,1:end),adtData(indexMin,1:end)];
 
-% Estimate impingement angles:
+% Estimate impingement from TMR:
+% - See https://www.sciencedirect.com/science/article/pii/S0094576518309883
 optTMR = adtData(indexMin,1);
-TMR_halfAgl = acosd(1/(2+optTMR)); % [deg]; half angle
-impgmtLoc = ((chambDiam/2)-(shaftRad*12))*tand(90-TMR_halfAgl); % [in]; horizontal offset from pintle holes
-wallImpgmt = impgmtLoc+shaftLength; % [in]
+TMR_halfAgl = acosd(1/(1+optTMR)); % [deg]; half angle
+impgmtLoc1 = ((chambDiam/2)-(shaftRad*12))*tand(90-TMR_halfAgl); % [in]; horizontal offset from pintle holes
+wallImpgmt1 = impgmtLoc1+shaftLength; % [in]
+
+% Estimate impingement from LMR:
+optLMR = optTMR*(annThk/injData(indexMin,4));
+LMR_halfAgl = acosd(1/(1+optLMR)); % [deg]; half angle
+impgmtLoc2 = ((chambDiam/2)-(shaftRad*12))*tand(90-LMR_halfAgl); % [in]
+wallImpgmt2 = impgmtLoc2+shaftLength; % [in]
+
+% Format data:
+impgmtData(1,1:6) = [optTMR,TMR_halfAgl,wallImpgmt1,optLMR,LMR_halfAgl,wallImpgmt2];
 
 % Output optimal data for throttling code:
 throttleData(1,1:9) = [disCoef,ofRatio,mdot,chambP,deltaP,dnstLOX,dnstRP1,mdotLOX,mdotRP1];
@@ -120,6 +127,7 @@ table2 = array2table(injData,'VariableNames',{'Number of Holes','LOX Diam [in]',
 table3 = array2table(adtData,'VariableNames',{'TMR','Moment Ratio','Actual OF Ratio','Blockage Factor'});
 table4 = array2table(msmtData,'VariableNames',{'Chamber Diam [in]','Shaft Diam [in]','Shaft Rad [ft]','Shaft Length [in]'});
 table5 = array2table(optData,'VariableNames',{'Number of Holes','LOX Diam [in]','LOX Area [in^2]','Real LOX Diam [ft]','Real LOX Area [ft^2]','Annular Thickness [ft]','RP1 Area [ft^2]','RP1 Vel [ft/s]','LOX Vel [ft/s]','TMR','Moment Ratio','Actual OF Ratio','Blockage Factor'});
+table6 = array2table(impgmtData,'VariableNames',{'TMR','TMR Half Angle [deg]','TMR Impingement Location [in]','LMR','LMR Half Angle [deg]','LMR Impingement Location [in]'});
 
 % Distribute results:
 mainPath = cd;
@@ -141,6 +149,8 @@ writematrix('Optimal Results:',filename,'Sheet',1,'Range','B112')
 writematrix('By O/F',filename,'Sheet',1,'Range','B114')
 writematrix('By Moment Ratio',filename,'Sheet',1,'Range','B115')
 writetable(table5,filename,'Sheet',1,'Range','C113')
+writematrix('Impingement:',filename,'Sheet',1,'Range','B117')
+writetable(table6,filename,'Sheet',1,'Range','B118')
 
 cd(mainPath)
 
