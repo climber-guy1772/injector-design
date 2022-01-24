@@ -102,6 +102,12 @@ tempMatrix3 = ones(1,length(momRatData));
 indexMin = floor(mean(indexMin));
 optData(2,1:end) = [injData(indexMin,1:end),adtData(indexMin,1:end)];
 
+% Estimate impingement angles:
+optTMR = adtData(indexMin,1);
+TMR_halfAgl = acosd(1/(2+optTMR)); % [deg]; half angle
+impgmtLoc = ((chambDiam/2)-(shaftRad*12))*tand(90-TMR_halfAgl); % [in]; horizontal offset from pintle holes
+wallImpgmt = impgmtLoc+shaftLength; % [in]
+
 % Output optimal data for throttling code:
 throttleData(1,1:9) = [disCoef,ofRatio,mdot,chambP,deltaP,dnstLOX,dnstRP1,mdotLOX,mdotRP1];
 throttleData(1,10:11) = optData(1,8:9);
