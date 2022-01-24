@@ -1,14 +1,19 @@
-% Program: Basic injector geometry calculations
-% Outputs: Can calculate the spray cone half angle and breakup length for
-%          both close and open-type coaxial swirl injectors. This file will
-%          output graphical representations of spray patterns.
+%{
+Purdue Space Program - Liquids
+Rocket 3 ECP1 - Coaxial Swirl Sizing
+-----------------------------
+Contributors: Liam Schenk, Ryan Lurye
+Last Modified: Dec., 2021
+Description: Script for experimental rocket coaxial swirl injector sizing and optimization.
+Version: v1.1.1
+%}
 
-% Inner injector inputs
+% Inner injector inputs:
 deltaP1 = input('Enter change in pressure [Pa] for propellant: ');
 numInlet1 = input('Enter number of inlet holes for propellant: ');
 rho1 = input('Enter density of fluid [kg/m^3] for propellant: ');
 
-% Outer injector inputs
+% Outer injector inputs:
 deltaP2 = input('Enter change in pressure [Pa] for oxidizer: ');
 numInlet2 = input('Enter number of inlet holes for oxidizer: ');
 rho2 = input('Enter density of fluid [kg/m^3] for oxidizer: ');
