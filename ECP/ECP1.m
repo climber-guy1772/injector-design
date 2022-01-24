@@ -107,7 +107,7 @@ impgmtLoc1 = ((chambDiam/2)-(shaftRad*12))*tand(90-TMR_halfAgl); % [in]; horizon
 wallImpgmt1 = impgmtLoc1+shaftLength; % [in]
 
 % Estimate impingement from LMR:
-optLMR = (dnstLOX*velLOX^2*areaLOX_real)/(dnstRP1*velRP1^2*annThk*diamLOX_real);% [N/A]
+optLMR = (dnstLOX*velLOX^2*areaLOX_real/numHoles)/(dnstRP1*velRP1^2*annThk*diamLOX_real);% [N/A]
 LMR_halfAgl = .85*atand(4*optLMR);% [deg] half angle
 impgmtLoc2 = ((chambDiam/2)-(shaftRad*12))*tand(90-LMR_halfAgl); % [in]
 wallImpgmt2 = impgmtLoc2+shaftLength; % [in]
